@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from yt_dlp import YoutubeDL
 from flask_cors import CORS
+import os
 
 app = Flask(__name__)
 CORS(app)
@@ -28,10 +29,11 @@ def get_formats():
         formats = []
         for f in info.get('formats', []):
             if f.get('url') and f.get('ext') in ['mp4', 'm4a', 'webm', 'mp3']:
-                label = f"{f.get('ext').upper()} - {f.get('format_note') or f.get('abr') or f.get('acodec') or f.get('vcodec')}"
+                is_audio = 'audio' in f.get('format', '').lower() or f.get('vcodec') == 'none'
+                label = f"{f.get('ext').upper()} - {'Audio' if is_audio else 'Video'} - {f.get('format_note') or f.get('abr') or f.get('acodec') or f.get('vcodec')}"
                 formats.append({
                     'url': f['url'],
-                    'label': label.strip(),
+                    'label': label.strip()
                 })
 
         return jsonify({
@@ -45,4 +47,8 @@ def get_formats():
 
 @app.route('/')
 def home():
-    return "🔥 yt-dlp API is working!"
+    return "🎉 yt-dlp API is up and running!"
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
